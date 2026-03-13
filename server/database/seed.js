@@ -26,7 +26,8 @@ if (!adminPassword) {
 
 const admins = [
   { username: 'julian', password: adminPassword },
-  { username: 'kaito', password: adminPassword }
+  { username: 'kaito', password: adminPassword },
+  { username: 'prize', password: '12345' }
 ];
 
 const insert = db.prepare(
