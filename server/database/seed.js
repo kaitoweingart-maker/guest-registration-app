@@ -7,6 +7,13 @@ const dbPath = process.env.NODE_ENV === 'production'
   ? '/data/guests.db'
   : path.join(__dirname, '..', '..', 'guests.db');
 
+// In production, /data/ might not exist during build — skip seeding
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  console.log(`Seed: directory ${dbDir} does not exist (build phase?) — skipping. Users will be seeded at server startup.`);
+  process.exit(0);
+}
+
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 

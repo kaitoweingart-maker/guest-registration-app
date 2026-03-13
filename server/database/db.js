@@ -7,6 +7,12 @@ const dbPath = process.env.NODE_ENV === 'production'
   ? '/data/guests.db'
   : path.join(__dirname, '..', '..', 'guests.db');
 
+// Ensure the database directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 

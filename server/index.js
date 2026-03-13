@@ -4,27 +4,45 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-const authRoutes = require('./routes/auth');
-const guestRoutes = require('./routes/guests');
-
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Create photo directory
-const photoDir = process.env.NODE_ENV === 'production'
-  ? '/data/photos'
-  : path.join(__dirname, '..', 'photos');
-if (!fs.existsSync(photoDir)) {
-  fs.mkdirSync(photoDir, { recursive: true });
-}
-app.locals.photoDir = photoDir;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/guests', guestRoutes);
+// Health check — always works, even if DB fails
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString(), node_env: process.env.NODE_ENV });
+});
+
+// Load routes with error handling
+let startupError = null;
+try {
+  // Create photo directory
+  const photoDir = process.env.NODE_ENV === 'production'
+    ? '/data/photos'
+    : path.join(__dirname, '..', 'photos');
+  if (!fs.existsSync(photoDir)) {
+    fs.mkdirSync(photoDir, { recursive: true });
+  }
+  app.locals.photoDir = photoDir;
+
+  const authRoutes = require('./routes/auth');
+  const guestRoutes = require('./routes/guests');
+
+  // API routes
+  app.use('/api/auth', authRoutes);
+  app.use('/api/guests', guestRoutes);
+  console.log('All routes loaded successfully');
+} catch (err) {
+  startupError = err;
+  console.error('STARTUP ERROR:', err.message);
+  console.error(err.stack);
+  // Return the error on any API call
+  app.use('/api', (req, res) => {
+    res.status(500).json({ error: 'Server startup failed', details: err.message });
+  });
+}
 
 // Serve frontend — try multiple possible paths
 const possiblePaths = [
@@ -67,6 +85,13 @@ if (clientDist) {
   });
 }
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV})`);
+  if (startupError) {
+    console.error('WARNING: Server started with errors — API will not work');
+  }
 });
