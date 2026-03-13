@@ -26,18 +26,45 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/guests', guestRoutes);
 
-// Serve frontend
-const clientDist = path.join(__dirname, '..', 'client', 'dist');
-const indexHtml = path.join(clientDist, 'index.html');
+// Serve frontend — try multiple possible paths
+const possiblePaths = [
+  path.join(__dirname, '..', 'client', 'dist'),
+  path.join(process.cwd(), 'client', 'dist'),
+  '/opt/render/project/src/client/dist',
+];
 
-if (fs.existsSync(indexHtml)) {
+let clientDist = null;
+for (const p of possiblePaths) {
+  const idx = path.join(p, 'index.html');
+  console.log(`Checking for frontend at: ${p} => exists: ${fs.existsSync(idx)}`);
+  if (fs.existsSync(idx)) {
+    clientDist = p;
+    break;
+  }
+}
+
+if (clientDist) {
+  const indexHtml = path.join(clientDist, 'index.html');
   console.log('Serving static files from', clientDist);
   app.use(express.static(clientDist));
   app.get('*', (req, res) => {
     res.sendFile(indexHtml);
   });
 } else {
-  console.warn('WARNING: client/dist not found at', clientDist);
+  console.error('ERROR: client/dist not found at any of:', possiblePaths);
+  // Fallback: show debug info
+  app.get('*', (req, res) => {
+    res.status(503).send(`
+      <h2>Frontend not built</h2>
+      <p>The server is running but client/dist was not found.</p>
+      <p>Checked paths:</p>
+      <ul>${possiblePaths.map(p => `<li>${p} — ${fs.existsSync(p) ? 'EXISTS' : 'NOT FOUND'}</li>`).join('')}</ul>
+      <p>__dirname: ${__dirname}</p>
+      <p>cwd: ${process.cwd()}</p>
+      <p>Contents of parent dir:</p>
+      <pre>${JSON.stringify(fs.readdirSync(path.join(__dirname, '..')), null, 2)}</pre>
+    `);
+  });
 }
 
 app.listen(PORT, () => {
