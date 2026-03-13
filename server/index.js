@@ -16,15 +16,21 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/guests', guestRoutes);
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+// Serve frontend
+const fs = require('fs');
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+const indexHtml = path.join(clientDist, 'index.html');
+
+if (fs.existsSync(indexHtml)) {
+  console.log('Serving static files from', clientDist);
   app.use(express.static(clientDist));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
+    res.sendFile(indexHtml);
   });
+} else {
+  console.warn('WARNING: client/dist not found at', clientDist);
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV})`);
 });

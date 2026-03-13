@@ -19,8 +19,9 @@ require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const adminPassword = process.env.ADMIN_PASSWORD;
 if (!adminPassword) {
-  console.error('ADMIN_PASSWORD env var is required. Set it in .env or Render.');
-  process.exit(1);
+  console.warn('WARNING: ADMIN_PASSWORD not set. Skipping user seed. Set it in Render env vars.');
+  db.close();
+  process.exit(0);
 }
 
 const admins = [
