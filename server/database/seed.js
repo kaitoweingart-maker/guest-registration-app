@@ -14,30 +14,24 @@ db.pragma('journal_mode = WAL');
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
 db.exec(schema);
 
-// Seed admin users (passwords from env vars)
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
-const adminPassword = process.env.ADMIN_PASSWORD;
-if (!adminPassword) {
-  console.warn('WARNING: ADMIN_PASSWORD not set. Skipping user seed. Set it in Render env vars.');
-  db.close();
-  process.exit(0);
-}
-
-const admins = [
-  { username: 'julian', password: adminPassword },
-  { username: 'kaito', password: adminPassword },
-  { username: 'prize', password: '12345' }
-];
-
 const insert = db.prepare(
-  'INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)'
+  'INSERT OR REPLACE INTO users (username, password) VALUES (?, ?)'
 );
 
-for (const admin of admins) {
-  const hash = bcrypt.hashSync(admin.password, 10);
-  insert.run(admin.username, hash);
-  console.log(`Admin user '${admin.username}' seeded.`);
+// Always create prize user
+const prizeHash = bcrypt.hashSync('12345', 10);
+insert.run('prize', prizeHash);
+console.log("Admin user 'prize' seeded.");
+
+// Create julian/kaito if ADMIN_PASSWORD is set
+const adminPassword = process.env.ADMIN_PASSWORD;
+if (adminPassword) {
+  const hash = bcrypt.hashSync(adminPassword, 10);
+  insert.run('julian', hash);
+  insert.run('kaito', hash);
+  console.log("Admin users 'julian' and 'kaito' seeded.");
 }
 
 db.close();
