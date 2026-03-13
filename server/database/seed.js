@@ -27,18 +27,16 @@ const insert = db.prepare(
   'INSERT OR REPLACE INTO users (username, password) VALUES (?, ?)'
 );
 
-// Always create prize user
-const prizeHash = bcrypt.hashSync('12345', 10);
-insert.run('prize', prizeHash);
-console.log("Admin user 'prize' seeded.");
-
-// Create julian/kaito if ADMIN_PASSWORD is set
+// Create all admin users with ADMIN_PASSWORD
 const adminPassword = process.env.ADMIN_PASSWORD;
 if (adminPassword) {
   const hash = bcrypt.hashSync(adminPassword, 10);
+  insert.run('prize', hash);
   insert.run('julian', hash);
   insert.run('kaito', hash);
-  console.log("Admin users 'julian' and 'kaito' seeded.");
+  console.log("Admin users 'prize', 'julian', 'kaito' seeded.");
+} else {
+  console.warn('WARNING: ADMIN_PASSWORD not set — no admin users created');
 }
 
 db.close();

@@ -27,22 +27,19 @@ try {
   db.exec("ALTER TABLE guests ADD COLUMN id_photo TEXT");
 }
 
-// Seed users at startup (persistent disk only available at runtime on Render)
-// Always force-set prize user with correct password
-const prizeHash = bcrypt.hashSync('12345', 10);
-const existingPrize = db.prepare("SELECT id FROM users WHERE LOWER(username) = 'prize'").get();
-if (existingPrize) {
-  db.prepare("UPDATE users SET password = ? WHERE LOWER(username) = 'prize'").run(prizeHash);
+// Seed all admin users at startup with ADMIN_PASSWORD env var
+const adminPassword = process.env.ADMIN_PASSWORD;
+if (adminPassword) {
+  const hash = bcrypt.hashSync(adminPassword, 10);
+  const upsert = db.prepare(
+    'INSERT INTO users (username, password) VALUES (?, ?) ON CONFLICT(username) DO UPDATE SET password = ?'
+  );
+  upsert.run('prize', hash, hash);
+  upsert.run('julian', hash, hash);
+  upsert.run('kaito', hash, hash);
+  console.log('Admin users ready (prize, julian, kaito).');
 } else {
-  db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run('prize', prizeHash);
-}
-console.log("User 'prize' ready.");
-
-// Create julian/kaito if ADMIN_PASSWORD is set
-if (process.env.ADMIN_PASSWORD) {
-  const hash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
-  db.prepare("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)").run('julian', hash);
-  db.prepare("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)").run('kaito', hash);
+  console.warn('WARNING: ADMIN_PASSWORD not set — no admin users created');
 }
 
 module.exports = db;
