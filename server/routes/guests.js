@@ -187,12 +187,16 @@ router.get('/export', authMiddleware, (req, res) => {
   const buffer = iconv.encode(csv, 'ISO-8859-1');
 
   // SiDAP filename: <Hotel-ID>_<ddmmyyyy>_<hhmm>_GEN_<SW>.csv
+  // Use Zurich timezone for filename
   const now = new Date();
-  const dd = String(now.getDate()).padStart(2, '0');
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const yyyy = now.getFullYear();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const min = String(now.getMinutes()).padStart(2, '0');
+  const zrh = new Intl.DateTimeFormat('de-CH', {
+    timeZone: 'Europe/Zurich',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(now);
+  const p = (type) => zrh.find(p => p.type === type).value;
+  const dd = p('day'), mm = p('month'), yyyy = p('year');
+  const hh = p('hour'), min = p('minute');
   // Hotel-ID assigned by Kantonspolizei — placeholder 2402
   const filename = `2402_${dd}${mm}${yyyy}_${hh}${min}_GEN_SAP.csv`;
 
