@@ -13,4 +13,11 @@ db.pragma('journal_mode = WAL');
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
 db.exec(schema);
 
+// Migration: add id_photo column if missing
+try {
+  db.prepare("SELECT id_photo FROM guests LIMIT 1").get();
+} catch {
+  db.exec("ALTER TABLE guests ADD COLUMN id_photo TEXT");
+}
+
 module.exports = db;

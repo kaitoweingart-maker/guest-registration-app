@@ -18,7 +18,7 @@ export default function Layout({ children, showAdmin = false }) {
             className="text-xl font-bold cursor-pointer"
             onClick={() => navigate('/')}
           >
-            Amanthos Living
+            Prize by Radisson
           </h1>
           <div className="flex items-center gap-3">
             {isAuthenticated && showAdmin && (

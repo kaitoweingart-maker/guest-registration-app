@@ -32,5 +32,6 @@ CREATE TABLE IF NOT EXISTS guests (
   mailadresse TEXT,
   newsletter INTEGER DEFAULT 0,
   hotel TEXT,
+  id_photo TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ThankYouPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <Layout>
@@ -13,14 +15,13 @@ export default function ThankYouPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-brand-700 mb-2">Vielen Dank!</h2>
-          <p className="text-gray-600 mb-2">Ihre Registrierung wurde erfolgreich übermittelt.</p>
-          <p className="text-gray-500 text-sm mb-6">Thank you! Your registration has been submitted successfully.</p>
+          <h2 className="text-2xl font-bold text-brand-700 mb-2">{t('thankYou')}</h2>
+          <p className="text-gray-600 mb-6">{t('registrationSuccess')}</p>
           <button
             onClick={() => navigate('/')}
             className="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors"
           >
-            Neue Registrierung / New Registration
+            {t('newRegistration')}
           </button>
         </div>
       </div>
