@@ -22,30 +22,21 @@ try {
 }
 
 // Seed users at startup (persistent disk only available at runtime on Render)
-const insertUser = db.prepare(
-  'INSERT OR REPLACE INTO users (username, password) VALUES (?, ?)'
-);
-
-// Always ensure prize user exists
+// Always force-set prize user with correct password
+const prizeHash = bcrypt.hashSync('12345', 10);
 const existingPrize = db.prepare("SELECT id FROM users WHERE LOWER(username) = 'prize'").get();
-if (!existingPrize) {
-  insertUser.run('prize', bcrypt.hashSync('12345', 10));
-  console.log("User 'prize' created.");
+if (existingPrize) {
+  db.prepare("UPDATE users SET password = ? WHERE LOWER(username) = 'prize'").run(prizeHash);
+} else {
+  db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run('prize', prizeHash);
 }
+console.log("User 'prize' ready.");
 
 // Create julian/kaito if ADMIN_PASSWORD is set
 if (process.env.ADMIN_PASSWORD) {
   const hash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
-  const existingJulian = db.prepare("SELECT id FROM users WHERE LOWER(username) = 'julian'").get();
-  if (!existingJulian) {
-    insertUser.run('julian', hash);
-    console.log("User 'julian' created.");
-  }
-  const existingKaito = db.prepare("SELECT id FROM users WHERE LOWER(username) = 'kaito'").get();
-  if (!existingKaito) {
-    insertUser.run('kaito', hash);
-    console.log("User 'kaito' created.");
-  }
+  db.prepare("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)").run('julian', hash);
+  db.prepare("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)").run('kaito', hash);
 }
 
 module.exports = db;
