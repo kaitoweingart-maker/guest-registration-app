@@ -23,8 +23,10 @@ const INITIAL_FORM = {
 };
 
 const REQUIRED_FIELDS = [
-  'familienname', 'vorname', 'geburtsdatum', 'adresse', 'plz', 'ort',
-  'land', 'ausweistyp', 'ausweis_nummer'
+  'familienname', 'vorname', 'geburtsdatum', 'geschlecht',
+  'geburtsort', 'heimatort', 'nationalitaet', 'adresse', 'plz', 'ort',
+  'land', 'beruf', 'ausweistyp', 'ausweis_nummer', 'zimmer_nummer',
+  'ankunftsdatum', 'abreisedatum', 'mailadresse'
 ];
 
 export default function GuestFormPage() {
@@ -153,7 +155,7 @@ export default function GuestFormPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>{t('roomNumber')}</label>
+                <label className={labelClass}>{t('roomNumber')} *</label>
                 <input type="text" name="zimmer_nummer" value={form.zimmer_nummer} onChange={handleChange} className={inputClass('zimmer_nummer')} />
               </div>
             </div>
@@ -177,7 +179,7 @@ export default function GuestFormPage() {
                   <input type="date" name="geburtsdatum" value={form.geburtsdatum} onChange={handleChange} className={inputClass('geburtsdatum')} />
                 </div>
                 <div>
-                  <label className={labelClass}>{t('gender')}</label>
+                  <label className={labelClass}>{t('gender')} *</label>
                   <select name="geschlecht" value={form.geschlecht} onChange={handleChange} className={inputClass('geschlecht')}>
                     <option value="">{t('pleaseSelect')}</option>
                     <option value="m">{t('male')}</option>
@@ -186,22 +188,22 @@ export default function GuestFormPage() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>{t('nationality')}</label>
+                  <label className={labelClass}>{t('nationality')} *</label>
                   <select name="nationalitaet" value={form.nationalitaet} onChange={handleChange} className={inputClass('nationalitaet')}>
                     <option value="">{t('pleaseSelect')}</option>
                     {countryOptions.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>{t('placeOfBirth')}</label>
+                  <label className={labelClass}>{t('placeOfBirth')} *</label>
                   <input type="text" name="geburtsort" value={form.geburtsort} onChange={handleChange} className={inputClass('geburtsort')} />
                 </div>
                 <div>
-                  <label className={labelClass}>{t('placeOfOrigin')}</label>
+                  <label className={labelClass}>{t('placeOfOrigin')} *</label>
                   <input type="text" name="heimatort" value={form.heimatort} onChange={handleChange} className={inputClass('heimatort')} />
                 </div>
                 <div>
-                  <label className={labelClass}>{t('occupation')}</label>
+                  <label className={labelClass}>{t('occupation')} *</label>
                   <input type="text" name="beruf" value={form.beruf} onChange={handleChange} className={inputClass('beruf')} />
                 </div>
               </div>
@@ -273,11 +275,11 @@ export default function GuestFormPage() {
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>{t('arrivalDate')}</label>
+                  <label className={labelClass}>{t('arrivalDate')} *</label>
                   <input type="date" name="ankunftsdatum" value={form.ankunftsdatum} onChange={handleChange} className={inputClass('ankunftsdatum')} />
                 </div>
                 <div>
-                  <label className={labelClass}>{t('departureDate')}</label>
+                  <label className={labelClass}>{t('departureDate')} *</label>
                   <input type="date" name="abreisedatum" value={form.abreisedatum} onChange={handleChange} className={inputClass('abreisedatum')} />
                 </div>
                 <div>
@@ -298,7 +300,7 @@ export default function GuestFormPage() {
               </legend>
               <div className="space-y-4">
                 <div>
-                  <label className={labelClass}>{t('email')}</label>
+                  <label className={labelClass}>{t('email')} *</label>
                   <input type="email" name="mailadresse" value={form.mailadresse} onChange={handleChange} className={inputClass('mailadresse')} />
                 </div>
                 <div className="flex items-center gap-2">
