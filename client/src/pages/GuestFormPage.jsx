@@ -8,12 +8,17 @@ import { getCountryOptions } from '../data/countries';
 
 const HOTEL_NAME = 'Prize by Radisson Affoltern am Albis';
 
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 const INITIAL_FORM = {
   familienname: '', vorname: '', geburtsdatum: '', geschlecht: '',
   geburtsort: '', heimatort: '', nationalitaet: '', adresse: '', adresse2: '',
   plz: '', ort: '', land: '', landeskennzeichen: '', beruf: '',
   fz_kennzeichen: '', ausweistyp: '', ausweis_nummer: '', zimmer_nummer: '',
-  personen_bis_16: '0', personen_ab_16: '1', ankunftsdatum: '', abreisedatum: '',
+  personen_bis_16: '0', personen_ab_16: '1', ankunftsdatum: todayISO(), abreisedatum: '',
   mailadresse: '', newsletter: true, hotel: HOTEL_NAME, id_photo: ''
 };
 
@@ -36,7 +41,6 @@ export default function GuestFormPage() {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
     setForm(prev => ({ ...prev, [name]: newValue }));
-    // Clear field error on change
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }));
     }
@@ -50,11 +54,26 @@ export default function GuestFormPage() {
     }
   }
 
+  function handleOcrResult(data) {
+    setForm(prev => {
+      const updated = { ...prev };
+      if (data.familienname && !prev.familienname) updated.familienname = data.familienname;
+      if (data.vorname && !prev.vorname) updated.vorname = data.vorname;
+      if (data.geburtsdatum && !prev.geburtsdatum) updated.geburtsdatum = data.geburtsdatum;
+      if (data.geschlecht && !prev.geschlecht) updated.geschlecht = data.geschlecht;
+      if (data.nationalitaet && !prev.nationalitaet) updated.nationalitaet = data.nationalitaet;
+      if (data.ausweis_nummer && !prev.ausweis_nummer) updated.ausweis_nummer = data.ausweis_nummer;
+      if (data.ausweistyp && !prev.ausweistyp) updated.ausweistyp = data.ausweistyp;
+      return updated;
+    });
+    // Clear any field errors for auto-filled fields
+    setFieldErrors({});
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
-    // Validate required fields
     const errors = {};
     for (const field of REQUIRED_FIELDS) {
       if (!form[field] || !String(form[field]).trim()) {
@@ -65,7 +84,6 @@ export default function GuestFormPage() {
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setError(t('requiredFields'));
-      // Scroll to top to show error
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -101,24 +119,46 @@ export default function GuestFormPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Hotel — read-only */}
-            <div>
-              <label className={labelClass}>{t('hotel')}</label>
-              <input
-                type="text"
-                value={HOTEL_NAME}
-                readOnly
-                className={`${inputBase} border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed`}
+
+            {/* 1. PASSPORT PHOTO — first thing, prominent */}
+            <fieldset>
+              <legend className="text-lg font-semibold text-brand-600 mb-2 border-b border-brand-100 pb-2">
+                {t('idPhoto')}
+              </legend>
+              <p className="text-xs text-gray-500 mb-3">{t('scanHint')}</p>
+              <PhotoCapture
+                value={form.id_photo}
+                onChange={(val) => setForm(prev => ({ ...prev, id_photo: val || '' }))}
+                onOcrResult={handleOcrResult}
+                labels={{
+                  idPhoto: t('idPhoto'),
+                  takePhoto: t('takePhoto'),
+                  uploadFile: t('uploadFile'),
+                  photoTaken: t('photoTaken'),
+                  removePhoto: t('removePhoto'),
+                  scanning: t('scanning'),
+                }}
               />
+            </fieldset>
+
+            {/* 2. Hotel + Room — quick info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>{t('hotel')}</label>
+                <input
+                  type="text"
+                  value={HOTEL_NAME}
+                  readOnly
+                  className={`${inputBase} border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed`}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>{t('roomNumber')}</label>
+                <input type="text" name="zimmer_nummer" value={form.zimmer_nummer} onChange={handleChange} className={inputClass('zimmer_nummer')} />
+              </div>
             </div>
 
-            {/* Zimmer */}
-            <div>
-              <label className={labelClass}>{t('roomNumber')}</label>
-              <input type="text" name="zimmer_nummer" value={form.zimmer_nummer} onChange={handleChange} className={inputClass('zimmer_nummer')} />
-            </div>
-
-            {/* Persönliche Daten */}
+            {/* 3. Personal Data */}
             <fieldset>
               <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
                 {t('personalData')}
@@ -146,6 +186,13 @@ export default function GuestFormPage() {
                   </select>
                 </div>
                 <div>
+                  <label className={labelClass}>{t('nationality')}</label>
+                  <select name="nationalitaet" value={form.nationalitaet} onChange={handleChange} className={inputClass('nationalitaet')}>
+                    <option value="">{t('pleaseSelect')}</option>
+                    {countryOptions.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
                   <label className={labelClass}>{t('placeOfBirth')}</label>
                   <input type="text" name="geburtsort" value={form.geburtsort} onChange={handleChange} className={inputClass('geburtsort')} />
                 </div>
@@ -154,20 +201,40 @@ export default function GuestFormPage() {
                   <input type="text" name="heimatort" value={form.heimatort} onChange={handleChange} className={inputClass('heimatort')} />
                 </div>
                 <div>
-                  <label className={labelClass}>{t('nationality')}</label>
-                  <select name="nationalitaet" value={form.nationalitaet} onChange={handleChange} className={inputClass('nationalitaet')}>
-                    <option value="">{t('pleaseSelect')}</option>
-                    {countryOptions.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div>
                   <label className={labelClass}>{t('occupation')}</label>
                   <input type="text" name="beruf" value={form.beruf} onChange={handleChange} className={inputClass('beruf')} />
                 </div>
               </div>
             </fieldset>
 
-            {/* Adresse */}
+            {/* 4. ID Information */}
+            <fieldset>
+              <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
+                {t('idInformation')}
+              </legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>{t('idType')} *</label>
+                  <select name="ausweistyp" value={form.ausweistyp} onChange={handleChange} className={inputClass('ausweistyp')}>
+                    <option value="">{t('pleaseSelect')}</option>
+                    <option value="PASS">{t('passport')}</option>
+                    <option value="ID">{t('idCard')}</option>
+                    <option value="AUTO">{t('driversLicense')}</option>
+                    <option value="AUSW">{t('foreignId')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>{t('idNumber')} *</label>
+                  <input type="text" name="ausweis_nummer" value={form.ausweis_nummer} onChange={handleChange} className={inputClass('ausweis_nummer')} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('vehiclePlate')}</label>
+                  <input type="text" name="fz_kennzeichen" value={form.fz_kennzeichen} onChange={handleChange} className={inputClass('fz_kennzeichen')} />
+                </div>
+              </div>
+            </fieldset>
+
+            {/* 5. Address */}
             <fieldset>
               <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
                 {t('address')}
@@ -199,49 +266,7 @@ export default function GuestFormPage() {
               </div>
             </fieldset>
 
-            {/* Ausweis */}
-            <fieldset>
-              <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
-                {t('idInformation')}
-              </legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>{t('idType')} *</label>
-                  <select name="ausweistyp" value={form.ausweistyp} onChange={handleChange} className={inputClass('ausweistyp')}>
-                    <option value="">{t('pleaseSelect')}</option>
-                    <option value="PASS">{t('passport')}</option>
-                    <option value="ID">{t('idCard')}</option>
-                    <option value="AUTO">{t('driversLicense')}</option>
-                    <option value="AUSW">{t('foreignId')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>{t('idNumber')} *</label>
-                  <input type="text" name="ausweis_nummer" value={form.ausweis_nummer} onChange={handleChange} className={inputClass('ausweis_nummer')} />
-                </div>
-                <div>
-                  <label className={labelClass}>{t('vehiclePlate')}</label>
-                  <input type="text" name="fz_kennzeichen" value={form.fz_kennzeichen} onChange={handleChange} className={inputClass('fz_kennzeichen')} />
-                </div>
-              </div>
-
-              {/* Photo */}
-              <div className="mt-4">
-                <label className={labelClass}>{t('idPhoto')}</label>
-                <PhotoCapture
-                  value={form.id_photo}
-                  onChange={(val) => setForm(prev => ({ ...prev, id_photo: val || '' }))}
-                  labels={{
-                    takePhoto: t('takePhoto'),
-                    uploadFile: t('uploadFile'),
-                    photoTaken: t('photoTaken'),
-                    removePhoto: t('removePhoto'),
-                  }}
-                />
-              </div>
-            </fieldset>
-
-            {/* Aufenthalt */}
+            {/* 6. Stay */}
             <fieldset>
               <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
                 {t('stay')}
@@ -266,7 +291,7 @@ export default function GuestFormPage() {
               </div>
             </fieldset>
 
-            {/* Kontakt */}
+            {/* 7. Contact */}
             <fieldset>
               <legend className="text-lg font-semibold text-brand-600 mb-3 border-b border-brand-100 pb-2">
                 {t('contact')}
