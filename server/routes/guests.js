@@ -59,16 +59,13 @@ router.post('/', (req, res) => {
   if (!geburtsdatum) missing.push('Geburtsdatum');
   if (!req.body.geschlecht) missing.push('Geschlecht');
   if (!req.body.geburtsort?.trim()) missing.push('Geburtsort');
-  if (!req.body.heimatort?.trim()) missing.push('Heimatort');
   if (!req.body.nationalitaet?.trim()) missing.push('Nationalität');
   if (!adresse?.trim()) missing.push('Adresse');
   if (!plz?.trim()) missing.push('PLZ');
   if (!ort?.trim()) missing.push('Ort');
   if (!land?.trim()) missing.push('Land');
-  if (!req.body.beruf?.trim()) missing.push('Beruf');
   if (!ausweistyp) missing.push('Ausweistyp');
   if (!ausweis_nummer?.trim()) missing.push('Ausweis-Nr.');
-  if (!req.body.zimmer_nummer?.trim()) missing.push('Zimmer-Nr.');
   if (!req.body.ankunftsdatum) missing.push('Ankunftsdatum');
   if (!req.body.abreisedatum) missing.push('Abreisedatum');
   if (!req.body.mailadresse?.trim()) missing.push('E-Mail');
