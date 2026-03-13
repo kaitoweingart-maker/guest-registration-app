@@ -14,10 +14,18 @@ db.pragma('journal_mode = WAL');
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
 db.exec(schema);
 
-// Seed admin users
+// Seed admin users (passwords from env vars)
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
+
+const adminPassword = process.env.ADMIN_PASSWORD;
+if (!adminPassword) {
+  console.error('ADMIN_PASSWORD env var is required. Set it in .env or Render.');
+  process.exit(1);
+}
+
 const admins = [
-  { username: 'julian', password: 'Amanthos2024!' },
-  { username: 'kaito', password: 'Amanthos2024!' }
+  { username: 'julian', password: adminPassword },
+  { username: 'kaito', password: adminPassword }
 ];
 
 const insert = db.prepare(
