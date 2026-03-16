@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login } from '../api/client';
 
@@ -12,8 +12,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   if (isAuthenticated) {
-    navigate('/admin/export', { replace: true });
-    return null;
+    return <Navigate to="/admin/export" replace />;
   }
 
   async function handleSubmit(e) {

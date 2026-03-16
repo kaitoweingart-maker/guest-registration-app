@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 const LANGUAGES = [
@@ -23,7 +24,10 @@ const LANGUAGES = [
 
 export default function LanguagePicker() {
   const { language, setLanguage } = useLanguage();
+  const location = useLocation();
 
+  // Don't show language picker on admin pages
+  if (location.pathname.startsWith('/admin')) return null;
   if (language) return null;
 
   return (
